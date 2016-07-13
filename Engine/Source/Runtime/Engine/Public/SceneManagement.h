@@ -1471,7 +1471,6 @@ struct FMeshBatchAndRelevance
 	uint32 bHasOpaqueOrMaskedMaterial : 1;
 	uint32 bRenderInMainPass : 1;
 	uint32 DepthPriorityGroup : SDPG_NumBits;
-	EPortalVisibility PortalVisibilityGroup;
 
 	FMeshBatchAndRelevance(const FMeshBatch& InMesh, const FPrimitiveSceneProxy* InPrimitiveSceneProxy, const FSceneView* View, ERHIFeatureLevel::Type FeatureLevel);
 };

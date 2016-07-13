@@ -116,7 +116,7 @@ public:
 					Parameters.FeatureLevel,
 					Parameters.bEditorCompositeDepthTest,
 					QOM_None,
-					Parameters.PortalVisibility
+					StaticMesh->PrimitiveSceneInfo->Proxy->GetPortalVisibilityGroup()
 				),
 				Parameters.FeatureLevel
 			);
@@ -147,8 +147,7 @@ void FBasePassClusteredOpaqueDrawingPolicyFactory::AddStaticMesh(FRHICommandList
 				bEditorCompositeDepthTest,
 				ESceneRenderTargetsMode::DontSet,
 				FeatureLevel,
-				false,
-				StaticMesh->PrimitiveSceneInfo->Proxy->GetPortalVisibilityGroup()
+				false
 				),
 			FDrawBasePassClusteredShadingStaticMeshAction(Scene,StaticMesh)
 			);
@@ -434,16 +433,14 @@ void FClusteredForwardShadingSceneRenderer::SetupBasePassView(FRHICommandListImm
 	}
 }
 
-bool FClusteredForwardShadingSceneRenderer::RenderForwardShadingBasePassView(FRHICommandListImmediate& RHICmdList, const FViewInfo& View, ESceneDepthPriorityGroup DepthPriorityGroup, bool PortalVisiblePass)
+bool FClusteredForwardShadingSceneRenderer::RenderForwardShadingBasePassView(FRHICommandListImmediate& RHICmdList, const FViewInfo& View, ESceneDepthPriorityGroup DepthPriorityGroup, bool bPortalVisibilityPass)
 {
 	EBasePassSort::Type const SortMode = GetSortMode(EarlyZPassMode != DDM_None);
 
-	auto DrawStaticPrimitives = [this, &RHICmdList, DepthPriorityGroup, SortMode](const FViewInfo& View, FScene::EBasePassDrawListType DrawType) -> bool
+	auto DrawStaticPrimitives = [this, &RHICmdList, DepthPriorityGroup, SortMode, bPortalVisibilityPass](const FViewInfo& View, FScene::EBasePassDrawListType DrawType) -> bool
 	{
 		bool bDirty = false;
 		
-		UE_LOG(LogTemp, Warning, TEXT("DrawDynamicPrimitives"));
-
 		// Render the base pass static data
 		if (SortMode == EBasePassSort::SortPerMesh && !View.IsInstancedStereoPass())
 		{
@@ -469,14 +466,14 @@ bool FClusteredForwardShadingSceneRenderer::RenderForwardShadingBasePassView(FRH
 			}
 			else
 			{
-				bDirty |= Scene->BasePassForClusteredShadingUniformLightMapPolicyDrawList[DrawType].DrawVisible(RHICmdList, DepthPriorityGroup, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility);
+				bDirty |= Scene->BasePassForClusteredShadingUniformLightMapPolicyDrawList[DrawType].DrawVisible(RHICmdList, DepthPriorityGroup, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility, bPortalVisibilityPass);
 			}            
 		}
 
 		return bDirty;
 	};
 
-	auto DrawDynamicPrimitives = [this, &RHICmdList, DepthPriorityGroup, PortalVisiblePass](const FViewInfo& View) -> bool
+	auto DrawDynamicPrimitives = [this, &RHICmdList, DepthPriorityGroup, bPortalVisibilityPass](const FViewInfo& View) -> bool
 	{
 		SCOPE_CYCLE_COUNTER(STAT_DynamicPrimitiveDrawTime);
 		bool bDirty = false;
@@ -484,8 +481,6 @@ bool FClusteredForwardShadingSceneRenderer::RenderForwardShadingBasePassView(FRH
 		// Oculus forward TODO: we don't support stencil ref changing on dynamic mesh elements.
 		{
 			SCOPED_DRAW_EVENT(RHICmdList, Dynamic);
-
-			UE_LOG(LogTemp, Warning, TEXT("DrawDynamicPrimitives"));
 
 			FBasePassClusteredOpaqueDrawingPolicyFactory::ContextType Context(false, ESceneRenderTargetsMode::DontSet);
 
@@ -498,11 +493,12 @@ bool FClusteredForwardShadingSceneRenderer::RenderForwardShadingBasePassView(FRH
 				if ((MeshBatchAndRelevance.bHasOpaqueOrMaskedMaterial || ViewFamily.EngineShowFlags.Wireframe) &&
 					(MeshBatchAndRelevance.DepthPriorityGroup == DepthPriorityGroup))
 				{
+					EPortalVisibility PortalVisibilityGroup = MeshBatchAndRelevance.PrimitiveSceneProxy->GetPortalVisibilityGroup();
 
-					UE_LOG(LogTemp, Warning, TEXT("PortalVisibility = %d"), PortalVisiblePass);
-					UE_LOG(LogTemp, Warning, TEXT("MeshBatchAndRelevance.PortalVisibility = %d"), (int)MeshBatchAndRelevance.PortalVisibilityGroup);
+					UE_LOG(LogTemp, Warning, TEXT("PortalVisibility = %d"), bPortalVisibilityPass);
+					UE_LOG(LogTemp, Warning, TEXT("MeshBatchAndRelevance.PortalVisibility = %d"), (int)PortalVisibilityGroup);
 
-					if ((PortalVisiblePass && MeshBatchAndRelevance.PortalVisibilityGroup == EPortalVisibility::PV_Skybox) || !PortalVisiblePass) {
+					if ((bPortalVisibilityPass && PortalVisibilityGroup == EPortalVisibility::PV_Skybox) || !bPortalVisibilityPass) {
 						const FMeshBatch& MeshBatch = *MeshBatchAndRelevance.Mesh;
 						bDirty |= FBasePassClusteredOpaqueDrawingPolicyFactory::DrawDynamicMesh(RHICmdList, View, Context, MeshBatch, false, true, MeshBatchAndRelevance.PrimitiveSceneProxy, MeshBatch.BatchHitProxyId, View.IsInstancedStereoPass());
 					}

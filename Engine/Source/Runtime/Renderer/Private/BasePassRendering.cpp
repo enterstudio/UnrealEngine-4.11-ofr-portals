@@ -438,7 +438,8 @@ bool FBasePassOpaqueDrawingPolicyFactory::DrawDynamicMesh(
 	bool bPreFog,
 	const FPrimitiveSceneProxy* PrimitiveSceneProxy,
 	FHitProxyId HitProxyId, 
-	const bool bIsInstancedStereo
+	const bool bIsInstancedStereo, 
+	const bool bPortalRendering // Switch for rendering only portal objects
 	)
 {
 	// Determine the mesh's material and blend mode.

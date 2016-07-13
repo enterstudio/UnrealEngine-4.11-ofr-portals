@@ -562,6 +562,8 @@ void FInstancedStaticMeshSceneProxy::GetDynamicMeshElements(const TArray<const F
 				const int32 LODIndex = GetLOD(View);
 				const FStaticMeshLODResources& LODModel = StaticMesh->RenderData->LODResources[LODIndex];
 
+				
+
 				for (int32 SectionIndex = 0; SectionIndex < LODModel.Sections.Num(); SectionIndex++)
 				{
 					const int32 NumBatches = GetNumMeshBatches();

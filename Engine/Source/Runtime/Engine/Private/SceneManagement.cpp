@@ -183,7 +183,6 @@ FMeshBatchAndRelevance::FMeshBatchAndRelevance(const FMeshBatch& InMesh, const F
 	bHasOpaqueOrMaskedMaterial = !IsTranslucentBlendMode(BlendMode);
 	bRenderInMainPass = PrimitiveSceneProxy->ShouldRenderInMainPass();
 	DepthPriorityGroup = InPrimitiveSceneProxy->GetDepthPriorityGroup(View);
-	PortalVisibilityGroup = PrimitiveSceneProxy->GetPortalVisibilityGroup();
 }
 
 static TAutoConsoleVariable<int32> CVarUseParallelGetDynamicMeshElementsTasks(

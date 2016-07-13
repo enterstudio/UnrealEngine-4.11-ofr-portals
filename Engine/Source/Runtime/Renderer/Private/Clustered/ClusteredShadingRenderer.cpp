@@ -208,7 +208,7 @@ void FClusteredForwardShadingSceneRenderer::Render(FRHICommandListImmediate& RHI
 	const bool bNeedsPrePass = NeedsPrePass(this);
 	if (bNeedsPrePass)
 	{
-		RenderPrePass(RHICmdList, SDPG_World, bDepthWasCleared);
+		RenderPrePass(RHICmdList, SDPG_World, bDepthWasCleared, false);
 		// at this point, the depth was cleared
 		bDepthWasCleared = true;
 	}
@@ -277,6 +277,7 @@ void FClusteredForwardShadingSceneRenderer::Render(FRHICommandListImmediate& RHI
 
 	RenderPortalPass(RHICmdList);
 
+	GRenderTargetPool.AddPhaseEvent(TEXT("BasePassPortalGroup"));
 	RenderForwardShadingBasePass(RHICmdList, SDPG_World, true);
 
 	// If we need the scene depth texture, resolve it
@@ -583,7 +584,7 @@ void FClusteredForwardShadingSceneRenderer::BlitBackgroundToViews(FRHICommandLis
 }
 
 /** Renders the scene's prepass and occlusion queries */
-bool FClusteredForwardShadingSceneRenderer::RenderPrePass(FRHICommandListImmediate& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, bool bDepthWasCleared)
+bool FClusteredForwardShadingSceneRenderer::RenderPrePass(FRHICommandListImmediate& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, bool bDepthWasCleared, bool bPortalVisibilityPass)
 {
 	SCOPED_DRAW_EVENT(RHICmdList, PrePass);
 	SCOPE_CYCLE_COUNTER(STAT_DepthDrawTime);
@@ -620,7 +621,7 @@ bool FClusteredForwardShadingSceneRenderer::RenderPrePass(FRHICommandListImmedia
 				const FViewInfo& View = Views[ViewIndex];
 				if (View.ShouldRenderView())
 				{
-					bDirty |= RenderPrePassView(RHICmdList, View, DepthPriorityGroup);
+					bDirty |= RenderPrePassView(RHICmdList, View, DepthPriorityGroup, bPortalVisibilityPass);
 				}
 			}
 		}
@@ -631,57 +632,53 @@ bool FClusteredForwardShadingSceneRenderer::RenderPrePass(FRHICommandListImmedia
 	return bDirty;
 }
 
-bool FClusteredForwardShadingSceneRenderer::RenderPrePassView(FRHICommandList& RHICmdList, const FViewInfo& View, ESceneDepthPriorityGroup DPG)
+bool FClusteredForwardShadingSceneRenderer::RenderPrePassView(FRHICommandList& RHICmdList, const FViewInfo& View, ESceneDepthPriorityGroup DPG, bool bPortalVisibilityPass)
 {
 	bool bDirty = false;
 
 	SetupPrePassView(RHICmdList, View);
-
-    // None of this does anything????????????
     
 	// Draw the static occluder primitives using a depth drawing policy.
-//	if (!View.IsInstancedStereoPass())
-//	{
-    
+	if (!View.IsInstancedStereoPass())
+	{
 		{
 			// Draw opaque occluders which support a separate position-only
 			// vertex buffer to minimize vertex fetch bandwidth, which is
 			// often the bottleneck during the depth only pass.
 			SCOPED_DRAW_EVENT(RHICmdList, PosOnlyOpaque);
-			bDirty |= Scene->PositionOnlyDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->PositionOnlyDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, bPortalVisibilityPass);
 		}
 		{
 			// Draw opaque occluders, using double speed z where supported.
 			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
-			bDirty |= Scene->DepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->DepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, bPortalVisibilityPass);
 		}
 
 		if (EarlyZPassMode >= DDM_AllOccluders)
 		{
 			// Draw opaque occluders with masked materials
 			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
-			bDirty |= Scene->MaskedDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->MaskedDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, bPortalVisibilityPass);
 		}
-    
-//	}
-//	else
-//	{
-//		const StereoPair StereoView(Views[0], Views[1], Views[0].StaticMeshOccluderMap, Views[1].StaticMeshOccluderMap, Views[0].StaticMeshBatchVisibility, Views[1].StaticMeshBatchVisibility);
-//		{
-//			SCOPED_DRAW_EVENT(RHICmdList, PosOnlyOpaque);
-//			bDirty |= Scene->PositionOnlyDepthDrawList.DrawVisibleInstancedStereo(RHICmdList, DPG, StereoView);
-//		}
-//		{
-//			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
-//			bDirty |= Scene->DepthDrawList.DrawVisibleInstancedStereo(RHICmdList, DPG, StereoView);
-//		}
-//
-//		if (EarlyZPassMode >= DDM_AllOccluders)
-//		{
-//			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
-//			bDirty |= Scene->MaskedDepthDrawList.DrawVisibleInstancedStereo(RHICmdList, DPG, StereoView);
-//		}
-//	}
+	}
+	else
+	{
+		const StereoPair StereoView(Views[0], Views[1], Views[0].StaticMeshOccluderMap, Views[1].StaticMeshOccluderMap, Views[0].StaticMeshBatchVisibility, Views[1].StaticMeshBatchVisibility);
+		{
+			SCOPED_DRAW_EVENT(RHICmdList, PosOnlyOpaque);
+			bDirty |= Scene->PositionOnlyDepthDrawList.DrawVisibleInstancedStereo(RHICmdList, DPG, StereoView);
+		}
+		{
+			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
+			bDirty |= Scene->DepthDrawList.DrawVisibleInstancedStereo(RHICmdList, DPG, StereoView);
+		}
+
+		if (EarlyZPassMode >= DDM_AllOccluders)
+		{
+			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
+			bDirty |= Scene->MaskedDepthDrawList.DrawVisibleInstancedStereo(RHICmdList, DPG, StereoView);
+		}
+	}
 
 //	bDirty |= RenderPrePassViewDynamic(RHICmdList, View, DPG);
 	return bDirty;

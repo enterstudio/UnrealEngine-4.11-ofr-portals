@@ -107,7 +107,7 @@ public:
 	 * @param FMaterialRenderProxy - The material instance to render on the mesh.
 	 * @param DepthPriorityGroup - The depth priority group to render the mesh in.
 	 */
-	ENGINE_API void Draw(FPrimitiveDrawInterface* PDI,const FMatrix& LocalToWorld,const FMaterialRenderProxy* MaterialRenderProxy,uint8 DepthPriorityGroup,bool bDisableBackfaceCulling=false, bool bReceivesDecals=true);
+	ENGINE_API void Draw(FPrimitiveDrawInterface* PDI,const FMatrix& LocalToWorld,const FMaterialRenderProxy* MaterialRenderProxy,uint8 DepthPriorityGroup, bool bDisableBackfaceCulling=false, bool bReceivesDecals=true);
 
 private:
 	class FDynamicMeshIndexBuffer* IndexBuffer;

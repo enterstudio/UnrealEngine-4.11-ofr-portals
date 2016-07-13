@@ -750,7 +750,6 @@ public:
 			SceneTextureMode == Other.SceneTextureMode &&
 			bAllowGlobalFog == Other.bAllowGlobalFog &&
 			bEnableSkyLight == Other.bEnableSkyLight && 
-
 			LightMapPolicy == Other.LightMapPolicy;
 	}
 
@@ -1035,7 +1034,8 @@ public:
 		bool bPreFog,
 		const FPrimitiveSceneProxy* PrimitiveSceneProxy,
 		FHitProxyId HitProxyId, 
-		const bool bIsInstancedStereo = false
+		const bool bIsInstancedStereo = false,
+		const bool bPortalRendering = false
 		);
 };
 
@@ -1054,9 +1054,9 @@ public:
 	/** Whether or not to perform depth test in the pixel shader */
 	const bool bEditorCompositeDepthTest;
 	const bool bIsInstancedStereo;
+	const bool bPortalRendering;
 	ESceneRenderTargetsMode::Type TextureMode;
 	ERHIFeatureLevel::Type FeatureLevel;
-	EPortalVisibility PortalVisibility;
 
 	/** Initialization constructor. */
 	FProcessBasePassMeshParameters(
@@ -1066,9 +1066,9 @@ public:
 		bool InbAllowFog,
 		bool bInEditorCompositeDepthTest,
 		ESceneRenderTargetsMode::Type InTextureMode,
-		ERHIFeatureLevel::Type InFeatureLevel, 
+		ERHIFeatureLevel::Type InFeatureLevel,
 		const bool InbIsInstancedStereo = false,
-		EPortalVisibility InPortalVisibility = EPortalVisibility::PV_None
+		const bool InbPortalRendering = false
 		):
 		Mesh(InMesh),
 		BatchElementMask(Mesh.Elements.Num()==1 ? 1 : (1<<Mesh.Elements.Num())-1), // 1 bit set for each mesh element
@@ -1081,7 +1081,7 @@ public:
 		TextureMode(InTextureMode),
 		FeatureLevel(InFeatureLevel), 
 		bIsInstancedStereo(InbIsInstancedStereo),
-		PortalVisibility(InPortalVisibility)
+		bPortalRendering(InbPortalRendering)
 	{
 	}
 
@@ -1096,7 +1096,7 @@ public:
 		ESceneRenderTargetsMode::Type InTextureMode,
 		ERHIFeatureLevel::Type InFeatureLevel, 
 		bool InbIsInstancedStereo = false,
-		EPortalVisibility InPortalVisibility = EPortalVisibility::PV_None
+		bool InbPortalRendering = false
 		) :
 		Mesh(InMesh),
 		BatchElementMask(InBatchElementMask),
@@ -1109,7 +1109,7 @@ public:
 		TextureMode(InTextureMode),
 		FeatureLevel(InFeatureLevel),
 		bIsInstancedStereo(InbIsInstancedStereo),
-		PortalVisibility(InPortalVisibility)
+		bPortalRendering(InbPortalRendering)
 	{
 	}
 };

@@ -504,7 +504,7 @@ void FForwardShadingSceneRenderer::RenderForwardShadingBasePass(FRHICommandListI
 			else
 			{
 				SCOPE_CYCLE_COUNTER(STAT_StaticDrawListDrawTime);
-				Scene->BasePassForForwardShadingUniformLightMapPolicyDrawList[FScene::EBasePass_Default].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility);
+				Scene->BasePassForForwardShadingUniformLightMapPolicyDrawList[FScene::EBasePass_Default].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility, false);
 			}
 		}
 
@@ -550,7 +550,7 @@ void FForwardShadingSceneRenderer::RenderForwardShadingBasePass(FRHICommandListI
 		else
 		{
 			SCOPE_CYCLE_COUNTER(STAT_StaticDrawListDrawTime);
-			Scene->BasePassForForwardShadingUniformLightMapPolicyDrawList[FScene::EBasePass_Masked].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap,View.StaticMeshBatchVisibility);
+			Scene->BasePassForForwardShadingUniformLightMapPolicyDrawList[FScene::EBasePass_Masked].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap,View.StaticMeshBatchVisibility, false);
 		}
 	}
 }

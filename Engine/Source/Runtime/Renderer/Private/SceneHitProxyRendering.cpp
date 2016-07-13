@@ -408,12 +408,12 @@ static void RenderHitProxies(FRHICommandListImmediate& RHICmdList, const FSceneR
 			if (!View.bAllowTranslucentPrimitivesInHitProxy)
 			{
 				// Draw the scene's hit proxy draw lists. (opaque primitives only)
-				SceneRenderer->Scene->HitProxyDrawList_OpaqueOnly.DrawVisible(RHICmdList, DepthPriorityGroup, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility);
+				SceneRenderer->Scene->HitProxyDrawList_OpaqueOnly.DrawVisible(RHICmdList, DepthPriorityGroup, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility, false);
 			}
 			else
 			{
 				// Draw the scene's hit proxy draw lists.
-				SceneRenderer->Scene->HitProxyDrawList.DrawVisible(RHICmdList, DepthPriorityGroup, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility);
+				SceneRenderer->Scene->HitProxyDrawList.DrawVisible(RHICmdList, DepthPriorityGroup, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility, false);
 			}
 		}
 

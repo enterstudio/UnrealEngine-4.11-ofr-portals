@@ -90,8 +90,6 @@ struct FMeshBatch
 	// e.g. SDPG_World (default), SDPG_Foreground
 	uint32 DepthPriorityGroup : SDPG_NumBits;
 
-	EPortalVisibility PortalVisibilityGroup : 8;
-
 	/** Whether view mode overrides can be applied to this mesh eg unlit, wireframe. */
 	uint32 bCanApplyViewModeOverrides : 1;
 
@@ -227,7 +225,6 @@ struct FMeshBatch
 	,	bWireframe(false)
 	,	Type(PT_TriangleList)
 	,	DepthPriorityGroup(SDPG_World)
-	,	PortalVisibilityGroup(EPortalVisibility::PV_None)
 	,	bCanApplyViewModeOverrides(false)
 	,	bUseWireframeSelectionColoring(false)
 	,	bUseSelectionOutline(true)

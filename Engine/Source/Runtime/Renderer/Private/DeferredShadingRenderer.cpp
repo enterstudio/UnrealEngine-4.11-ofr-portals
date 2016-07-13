@@ -207,7 +207,7 @@ bool FDeferredShadingSceneRenderer::RenderBasePassStaticDataMasked(FRHICommandLi
 	{
 		{
 			SCOPED_DRAW_EVENT(RHICmdList, StaticMasked);
-			bDirty |= Scene->BasePassUniformLightMapPolicyDrawList[MaskedDrawType].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->BasePassUniformLightMapPolicyDrawList[MaskedDrawType].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility, false);
 		}
 	}
 	else
@@ -228,12 +228,12 @@ void FDeferredShadingSceneRenderer::RenderBasePassStaticDataMaskedParallel(FPara
 	const FScene::EBasePassDrawListType MaskedDrawType = FScene::EBasePass_Masked;
 	if (!ParallelCommandListSet.View.IsInstancedStereoPass())
 	{
-		Scene->BasePassUniformLightMapPolicyDrawList[MaskedDrawType].DrawVisibleParallel(DPG, ParallelCommandListSet.View.StaticMeshVisibilityMap, ParallelCommandListSet.View.StaticMeshBatchVisibility, ParallelCommandListSet);
+		Scene->BasePassUniformLightMapPolicyDrawList[MaskedDrawType].DrawVisibleParallel(DPG, ParallelCommandListSet.View.StaticMeshVisibilityMap, ParallelCommandListSet.View.StaticMeshBatchVisibility, ParallelCommandListSet, false);
 	}
 	else
 	{
 		const StereoPair StereoView(Views[0], Views[1], Views[0].StaticMeshVisibilityMap, Views[1].StaticMeshVisibilityMap, Views[0].StaticMeshBatchVisibility, Views[1].StaticMeshBatchVisibility);
-		Scene->BasePassUniformLightMapPolicyDrawList[MaskedDrawType].DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet);
+		Scene->BasePassUniformLightMapPolicyDrawList[MaskedDrawType].DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet, false);
 	}
 }
 
@@ -246,7 +246,7 @@ bool FDeferredShadingSceneRenderer::RenderBasePassStaticDataDefault(FRHICommandL
 	{
 		{
 			SCOPED_DRAW_EVENT(RHICmdList, StaticOpaque);
-			bDirty |= Scene->BasePassUniformLightMapPolicyDrawList[OpaqueDrawType].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->BasePassUniformLightMapPolicyDrawList[OpaqueDrawType].DrawVisible(RHICmdList, DPG, View, View.StaticMeshVisibilityMap, View.StaticMeshBatchVisibility, false);
 		}
 	}
 	else
@@ -267,12 +267,12 @@ void FDeferredShadingSceneRenderer::RenderBasePassStaticDataDefaultParallel(FPar
 	const FScene::EBasePassDrawListType OpaqueDrawType = FScene::EBasePass_Default;
 	if (!ParallelCommandListSet.View.IsInstancedStereoPass())
     {
-		Scene->BasePassUniformLightMapPolicyDrawList[OpaqueDrawType].DrawVisibleParallel(DPG, ParallelCommandListSet.View.StaticMeshVisibilityMap, ParallelCommandListSet.View.StaticMeshBatchVisibility, ParallelCommandListSet);
+		Scene->BasePassUniformLightMapPolicyDrawList[OpaqueDrawType].DrawVisibleParallel(DPG, ParallelCommandListSet.View.StaticMeshVisibilityMap, ParallelCommandListSet.View.StaticMeshBatchVisibility, ParallelCommandListSet, false);
 	}
 	else
 	{
 		const StereoPair StereoView(Views[0], Views[1], Views[0].StaticMeshVisibilityMap, Views[1].StaticMeshVisibilityMap, Views[0].StaticMeshBatchVisibility, Views[1].StaticMeshBatchVisibility);
-		Scene->BasePassUniformLightMapPolicyDrawList[OpaqueDrawType].DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet);
+		Scene->BasePassUniformLightMapPolicyDrawList[OpaqueDrawType].DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet, false);
 	}
 }
 
@@ -1433,19 +1433,19 @@ bool FDeferredShadingSceneRenderer::RenderPrePassView(FRHICommandList& RHICmdLis
 			// vertex buffer to minimize vertex fetch bandwidth, which is
 			// often the bottleneck during the depth only pass.
 			SCOPED_DRAW_EVENT(RHICmdList, PosOnlyOpaque);
-			bDirty |= Scene->PositionOnlyDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->PositionOnlyDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, false);
 		}
 		{
 			// Draw opaque occluders, using double speed z where supported.
 			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
-			bDirty |= Scene->DepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->DepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, false);
 		}
 
 		if (EarlyZPassMode >= DDM_AllOccluders)
 		{
 			// Draw opaque occluders with masked materials
 			SCOPED_DRAW_EVENT(RHICmdList, Opaque);
-			bDirty |= Scene->MaskedDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility);
+			bDirty |= Scene->MaskedDepthDrawList.DrawVisible(RHICmdList, DPG, View, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, false);
 		}
 	}
 	else
@@ -1558,27 +1558,27 @@ void FDeferredShadingSceneRenderer::RenderPrePassViewParallel(const FViewInfo& V
 		// Draw opaque occluders which support a separate position-only
 		// vertex buffer to minimize vertex fetch bandwidth, which is
 		// often the bottleneck during the depth only pass.
-		Scene->PositionOnlyDepthDrawList.DrawVisibleParallel(DPG, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, ParallelCommandListSet);
+		Scene->PositionOnlyDepthDrawList.DrawVisibleParallel(DPG, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, ParallelCommandListSet, false);
 
 		// Draw opaque occluders, using double speed z where supported.
-		Scene->DepthDrawList.DrawVisibleParallel(DPG, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, ParallelCommandListSet);
+		Scene->DepthDrawList.DrawVisibleParallel(DPG, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, ParallelCommandListSet, false);
 
 		// Draw opaque occluders with masked materials
 		if (EarlyZPassMode >= DDM_AllOccluders)
 		{			
-			Scene->MaskedDepthDrawList.DrawVisibleParallel(DPG, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, ParallelCommandListSet);
+			Scene->MaskedDepthDrawList.DrawVisibleParallel(DPG, View.StaticMeshOccluderMap, View.StaticMeshBatchVisibility, ParallelCommandListSet, false);
 		}
 	}
 	else
 	{
 		const StereoPair StereoView(Views[0], Views[1], Views[0].StaticMeshOccluderMap, Views[1].StaticMeshOccluderMap, Views[0].StaticMeshBatchVisibility, Views[1].StaticMeshBatchVisibility);
 
-		Scene->PositionOnlyDepthDrawList.DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet);
-		Scene->DepthDrawList.DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet);
+		Scene->PositionOnlyDepthDrawList.DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet, false);
+		Scene->DepthDrawList.DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet, false);
 
 		if (EarlyZPassMode >= DDM_AllOccluders)
 		{
-			Scene->MaskedDepthDrawList.DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet);
+			Scene->MaskedDepthDrawList.DrawVisibleParallelInstancedStereo(DPG, StereoView, ParallelCommandListSet, false);
 		}
 	}
 

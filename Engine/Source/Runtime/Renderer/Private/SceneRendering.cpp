@@ -1836,7 +1836,7 @@ void FSceneRenderer::RenderPortalPass(FRHICommandListImmediate& RHICmdList)
 
 		// Clear scene color where the stencil buffer is 
 		RHICmdList.SetDepthStencilState(TStaticDepthStencilState<
-			false, CF_LessEqual,
+			true, CF_NotEqual,
 			true, CF_NotEqual, SO_Keep, SO_Keep, SO_Keep,
 			true, CF_NotEqual, SO_Keep, SO_Keep, SO_Keep,
 			0x80, 0x80>::GetRHI(), 0);

@@ -29,7 +29,7 @@ bool FPortalPrimSet::DrawPrims(FRHICommandListImmediate& RHICmdList, const FView
 
 		// Set the stencil buffer state, write 1's
 		RHICmdList.SetDepthStencilState(TStaticDepthStencilState<
-			/* Enable Depth Write = */ false,
+			/* Enable Depth Write = */ true,
 			/* Depth Test Method = */ CF_DepthNearOrEqual,
 			/* Enable Front Face Stecil = */ true,
 			/* Front Face Stencil Test Method = */ CF_Always,

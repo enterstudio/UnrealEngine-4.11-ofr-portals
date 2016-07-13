@@ -80,8 +80,8 @@ protected:
 	bool RenderBackgroundLayer(FRHICommandListImmediate& RHICmdList);
 	void BlitBackgroundToViews(FRHICommandListImmediate& RHICmdList);
 
-	bool RenderPrePass(FRHICommandListImmediate& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, bool bDepthWasCleared);
-	bool RenderPrePassView(FRHICommandList& RHICmdList, const FViewInfo& View, ESceneDepthPriorityGroup DepthPriorityGroup);
+	bool RenderPrePass(FRHICommandListImmediate& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, bool bDepthWasCleared, bool bPortalVisibilityPass);
+	bool RenderPrePassView(FRHICommandList& RHICmdList, const FViewInfo& View, ESceneDepthPriorityGroup DepthPriorityGroup, bool bPortalVisibilityPass);
 	bool RenderPrePassViewDynamic(FRHICommandList& RHICmdList, const FViewInfo& View, ESceneDepthPriorityGroup DepthPriorityGroup);
 
 	void RenderForwardDistortion(FRHICommandListImmediate& RHICmdList);

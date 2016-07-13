@@ -546,13 +546,13 @@ public:
 		ERHIFeatureLevel::Type InFeatureLevel,
 		bool bInEnableEditorPrimitiveDepthTest = false,
 		EQuadOverdrawMode InQuadOverdrawMode = QOM_None,
-		EPortalVisibility InPortalVisibility = EPortalVisibility::PV_None
+		EPortalVisibility InPortalVisibilityGroup = EPortalVisibility::PV_None
 		) :
 		FMeshDrawingPolicy(InVertexFactory, InMaterialRenderProxy, InMaterialResource, bOverrideWithShaderComplexity, false, false, false, AllowRuntimeQuadOverdraw(InFeatureLevel) ? InQuadOverdrawMode : QOM_None),
 		LightMapPolicy(InLightMapPolicy),
 		BlendMode(InBlendMode),
 		SceneTextureMode(InSceneTextureMode),
-		PortalVisibility(InPortalVisibility),
+		PortalVisibilityGroup(InPortalVisibilityGroup),
 		bEnableEditorPrimitiveDepthTest(bInEnableEditorPrimitiveDepthTest),
 		bEnableSkyLight(bInEnableSkyLight),
 		bEnableReflectionProbe(bInEnableReflectionProbe),
@@ -834,7 +834,7 @@ protected:
 
 	LightMapPolicyType LightMapPolicy;
 	EBlendMode BlendMode;
-	EPortalVisibility PortalVisibility;
+	EPortalVisibility PortalVisibilityGroup;
 	ESceneRenderTargetsMode::Type SceneTextureMode;
 	/** Whether or not this policy is compositing editor primitives and needs to depth test against the scene geometry in the base pass pixel shader */
 	uint32 bEnableEditorPrimitiveDepthTest : 1;

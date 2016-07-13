@@ -209,25 +209,21 @@ private:
 	{
 		ESceneDepthPriorityGroup DepthPriorityGroup;
 
-		EPortalVisibility PortalVisibilityGroup;
-
-		FPolicyAndDepthPriorityGroup(const DrawingPolicyType& InDrawingPolicy, ESceneDepthPriorityGroup InDepthPriorityGroup, EPortalVisibility InPortalVisibilityGroup) :
+		FPolicyAndDepthPriorityGroup(const DrawingPolicyType& InDrawingPolicy, ESceneDepthPriorityGroup InDepthPriorityGroup) :
 			DrawingPolicyType(InDrawingPolicy),
-			DepthPriorityGroup(InDepthPriorityGroup),
-			PortalVisibilityGroup(InPortalVisibilityGroup)
+			DepthPriorityGroup(InDepthPriorityGroup)
 		{
 		}
 
 		bool Matches(const FPolicyAndDepthPriorityGroup& RHS) const
 		{
 			return DepthPriorityGroup == RHS.DepthPriorityGroup &&
-				PortalVisibilityGroup == RHS.PortalVisibilityGroup && 
 				DrawingPolicyType::Matches(RHS);
 		}
 
         uint32 GetKeyHash(const FPolicyAndDepthPriorityGroup& Key)
 		{
-			return DrawingPolicyType::GetTypeHash() ^ DepthPriorityGroup ^ PortalVisibilityGroup;
+			return DrawingPolicyType::GetTypeHash() ^ DepthPriorityGroup;
 		}
 	};
 
@@ -251,8 +247,8 @@ private:
 		uint32 VisibleCount;
 
 		/** Initialization constructor. */
-		FDrawingPolicyLink(TStaticMeshDrawList* InDrawList, const DrawingPolicyType& InDrawingPolicy, ESceneDepthPriorityGroup DepthPriorityGroup, EPortalVisibility PortalVisibility, ERHIFeatureLevel::Type InFeatureLevel) :
-			DrawingPolicy(InDrawingPolicy, DepthPriorityGroup, PortalVisibility),
+		FDrawingPolicyLink(TStaticMeshDrawList* InDrawList, const DrawingPolicyType& InDrawingPolicy, ESceneDepthPriorityGroup DepthPriorityGroup, ERHIFeatureLevel::Type InFeatureLevel) :
+			DrawingPolicy(InDrawingPolicy, DepthPriorityGroup),
 			DrawList(InDrawList),
 			VisibleCount(0)
 		{
@@ -335,7 +331,7 @@ public:
 	 * @param StaticMeshVisibilityMap - An map from FStaticMesh::Id to visibility state.
 	 * @return True if any static meshes were drawn.
 	 */
-	bool DrawVisible(ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const typename DrawingPolicyType::ContextDataType PolicyContext, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap);
+	bool DrawVisible(ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const typename DrawingPolicyType::ContextDataType PolicyContext, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, bool bPortalVisibilityPass);
 
 	/**
 	* Draws only the static meshes which are in the visibility map, limited to a range of policies
@@ -358,7 +354,8 @@ public:
 		const StereoPair* const StereoView,
 		int32 FirstPolicy,
 		int32 LastPolicy,
-		bool bUpdateCounts);
+		bool bUpdateCounts,
+		bool bPortalVisibilityPass);
 
 	/**
 	* Draws only the static meshes which are in the visibility map of the stereo pair
@@ -370,7 +367,7 @@ public:
         const ESceneDepthPriorityGroup DepthPriorityGroup,
 		const StereoPair& StereoView)
 	{
-		return DrawVisibleInner<InstancedStereoPolicy::Enabled>(RHICmdList, DepthPriorityGroup, *StereoView.LeftView, typename DrawingPolicyType::ContextDataType(true, false), nullptr, nullptr, &StereoView, 0, OrderedDrawingPolicies.Num() - 1, false);
+		return DrawVisibleInner<InstancedStereoPolicy::Enabled>(RHICmdList, DepthPriorityGroup, *StereoView.LeftView, typename DrawingPolicyType::ContextDataType(true, false), nullptr, nullptr, &StereoView, 0, OrderedDrawingPolicies.Num() - 1, false, false);
 	}
 
 	/**
@@ -380,7 +377,7 @@ public:
 	 * @param BatchVisibilityArray - An array of batch element visibility bitmasks.
 	 * @return True if any static meshes were drawn.
 	 */
-	bool DrawVisible(FRHICommandList& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const typename DrawingPolicyType::ContextDataType PolicyContext, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray);
+	bool DrawVisible(FRHICommandList& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const typename DrawingPolicyType::ContextDataType PolicyContext, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray, bool bPortalVisiblityPass);
 
 private:
 
@@ -390,7 +387,8 @@ private:
 		const TBitArray<SceneRenderingBitArrayAllocator>* StaticMeshVisibilityMap,
 		const TArray<uint64, SceneRenderingAllocator>* BatchVisibilityArray,
 		const StereoPair* const StereoView, 
-		FParallelCommandListSet& ParallelCommandListSet);
+		FParallelCommandListSet& ParallelCommandListSet,
+		bool bPortalVisibilityPass);
 
 public:
 
@@ -405,9 +403,10 @@ public:
 		const typename DrawingPolicyType::ContextDataType PolicyContext,
 		const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap,
 		const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray,
-		FParallelCommandListSet& ParallelCommandListSet)
+		FParallelCommandListSet& ParallelCommandListSet,
+		bool bPortalVisibilityPass)
 	{
-		DrawVisibleParallelInternal(DepthPriorityGroup, PolicyContext, &StaticMeshVisibilityMap, &BatchVisibilityArray, nullptr, ParallelCommandListSet);
+		DrawVisibleParallelInternal(DepthPriorityGroup, PolicyContext, &StaticMeshVisibilityMap, &BatchVisibilityArray, nullptr, ParallelCommandListSet, bPortalVisibilityPass);
 	}
 
 	/**
@@ -415,9 +414,9 @@ public:
 	* @param StereoView - Instanced stereo view state
 	* @param ParallelCommandListSet - holds information on how to get a fresh command list and deal with submits, etc
 	*/
-	inline void DrawVisibleParallelInstancedStereo(ESceneDepthPriorityGroup DepthPriorityGroup, const StereoPair& StereoView, FParallelCommandListSet& ParallelCommandListSet)
+	inline void DrawVisibleParallelInstancedStereo(ESceneDepthPriorityGroup DepthPriorityGroup, const StereoPair& StereoView, FParallelCommandListSet& ParallelCommandListSet, bool bPortalVisibilityPass)
 	{
-		DrawVisibleParallelInternal(DepthPriorityGroup, typename DrawingPolicyType::ContextDataType(true, false), nullptr, nullptr, &StereoView, ParallelCommandListSet);
+		DrawVisibleParallelInternal(DepthPriorityGroup, typename DrawingPolicyType::ContextDataType(true, false), nullptr, nullptr, &StereoView, ParallelCommandListSet, bPortalVisibilityPass);
 	}
 
 	/**
@@ -433,19 +432,19 @@ public:
 	/**
 	 * Helper functions when policy context is not needed.
 	 */
-	inline bool DrawVisible(ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap)
+	inline bool DrawVisible(ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, bool bPortalVisibilityPass)
 	{
-		return DrawVisible(DepthPriorityGroup, View, typename DrawingPolicyType::ContextDataType(), StaticMeshVisibilityMap);
+		return DrawVisible(DepthPriorityGroup, View, typename DrawingPolicyType::ContextDataType(), StaticMeshVisibilityMap, bPortalVisibilityPass);
 	}
 
-	inline bool DrawVisible(FRHICommandList& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray)
+	inline bool DrawVisible(FRHICommandList& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray, bool bPortalVisibilityPass)
 	{
-		return DrawVisible(RHICmdList, DepthPriorityGroup, View, typename DrawingPolicyType::ContextDataType(), StaticMeshVisibilityMap, BatchVisibilityArray);
+		return DrawVisible(RHICmdList, DepthPriorityGroup, View, typename DrawingPolicyType::ContextDataType(), StaticMeshVisibilityMap, BatchVisibilityArray, bPortalVisibilityPass);
 	}
 
-	inline void DrawVisibleParallel(ESceneDepthPriorityGroup DepthPriorityGroup, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray, FParallelCommandListSet& ParallelCommandListSet)
+	inline void DrawVisibleParallel(ESceneDepthPriorityGroup DepthPriorityGroup, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray, FParallelCommandListSet& ParallelCommandListSet, bool bPortalVisibilityPass)
 	{
-		DrawVisibleParallel(DepthPriorityGroup, typename DrawingPolicyType::ContextDataType(), StaticMeshVisibilityMap, BatchVisibilityArray, ParallelCommandListSet);
+		DrawVisibleParallel(DepthPriorityGroup, typename DrawingPolicyType::ContextDataType(), StaticMeshVisibilityMap, BatchVisibilityArray, ParallelCommandListSet, bPortalVisibilityPass);
 	}
 
 	inline int32 DrawVisibleFrontToBack(FRHICommandList& RHICmdList, ESceneDepthPriorityGroup DepthPriorityGroup, const FViewInfo& View, const TBitArray<SceneRenderingBitArrayAllocator>& StaticMeshVisibilityMap, const TArray<uint64, SceneRenderingAllocator>& BatchVisibilityArray, int32 MaxToDraw)

@@ -702,6 +702,7 @@ private:
     /** This primative has bRenderPortal enabled */
     uint32 bRenderPortal : 1;
     
+	/** This portal visibility rendering group that this primitive belongs to */
     EPortalVisibility PortalVisibilityGroup;
 
 	/** This primitive has bRenderCustomDepth enabled */

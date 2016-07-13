@@ -1209,7 +1209,6 @@ void FStaticMeshRenderData::Cache(UStaticMesh* Owner, const FStaticMeshLODSettin
 		return;
 	}
 
-
 	int32 T0 = FPlatformTime::Cycles();
 	int32 NumLODs = Owner->SourceModels.Num();
 	const FStaticMeshLODGroup& LODGroup = LODSettings.GetLODGroup(Owner->LODGroup);

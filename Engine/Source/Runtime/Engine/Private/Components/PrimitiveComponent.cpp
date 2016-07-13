@@ -1096,7 +1096,6 @@ void UPrimitiveComponent::SetCachedMaxDrawDistance(const float NewCachedMaxDrawD
 	}
 }
 
-
 void UPrimitiveComponent::SetDepthPriorityGroup(ESceneDepthPriorityGroup NewDepthPriorityGroup)
 {
 	if (DepthPriorityGroup != NewDepthPriorityGroup)
@@ -1105,8 +1104,6 @@ void UPrimitiveComponent::SetDepthPriorityGroup(ESceneDepthPriorityGroup NewDept
 		MarkRenderStateDirty();
 	}
 }
-
-
 
 void UPrimitiveComponent::SetViewOwnerDepthPriorityGroup(
 	bool bNewUseViewOwnerDepthPriorityGroup,
