@@ -1,0 +1,25 @@
+{
+	"FileVersion" : 3,
+	"Version" : 1,
+	"VersionName" : "1.0",
+	"FriendlyName" : "Genesis Noir Meta-Importer",
+	"Description" : "Something cool goes here ya dummy",
+	"Category" : "Editor",
+	"CreatedBy" : "Feral Cat Den",
+	"CreatedByURL" : "http://www.speedtree.com",
+	"DocsURL" : "",
+	"MarketplaceURL" : "",
+	"SupportURL" : "",
+	"EnabledByDefault" : true,
+	"CanContainContent" : false,
+	"IsBetaVersion" : false,
+	"Installed" : false,
+	"Modules" :
+	[
+		{
+			"Name" : "GenesisMetaImporter",
+			"Type" : "Editor",
+			"LoadingPhase" : "Default"
+		}
+	]
+}
